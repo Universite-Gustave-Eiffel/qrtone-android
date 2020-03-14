@@ -39,7 +39,7 @@ class ChatActivity : AppCompatActivity() {
                         Calendar.getInstance().timeInMillis
                 )
                 onNewData(message.user, message.message, message.time)
-                playMessage(craftMessage(App.user, txtMessage.text.toString()))
+                playMessage(message.craftMessage())
                 resetInput(false)
             } else {
                 Toast.makeText(applicationContext,"Message should not be empty", Toast.LENGTH_SHORT).show()
@@ -47,27 +47,6 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-    enum class ATTRIBUTE {
-        USERNAME, MESSAGE
-    }
-
-    @Throws(IOException::class)
-    fun craftMessage(userName: String, message: String): ByteArray {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        val writer = DataOutputStream(byteArrayOutputStream)
-        // Username
-        writer.writeByte(ATTRIBUTE.USERNAME.ordinal)
-        val userNameBytes = userName.toByteArray()
-        writer.writeByte(userNameBytes.size)
-        writer.write(userNameBytes)
-        // message
-        writer.writeByte(ATTRIBUTE.MESSAGE.ordinal)
-        val messageBytes = message.toByteArray()
-        writer.writeByte(messageBytes.size)
-        writer.write(messageBytes)
-        writer.flush()
-        return byteArrayOutputStream.toByteArray()
-    }
 
     private fun getAudioOutput(): Int {
         return AudioManager.STREAM_RING
@@ -169,6 +148,6 @@ class ChatActivity : AppCompatActivity() {
     }
 
     companion object{
-        val BUFFER_SIZE = 1024
+        const val BUFFER_SIZE = 1024
     }
 }

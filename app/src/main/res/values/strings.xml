@@ -23,4 +23,5 @@
     <string name="username_hint">Username</string>
     <string name="start">Start</string>
     <string name="hint_message">Enter message</string>
+    <string name="permission_explain_audio_record">Recording audio is necessary for decoding audio messages</string>
 </resources>

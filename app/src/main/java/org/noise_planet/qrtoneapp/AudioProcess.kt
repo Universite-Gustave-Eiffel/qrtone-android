@@ -170,7 +170,9 @@ class AudioProcess constructor(
                         }
                     }
                 }
+                Thread.sleep(15)
             }
+            processing.set(false)
         }
     }
 
@@ -219,7 +221,6 @@ class AudioProcess constructor(
             }
         }
         processingThread.init(rate.toDouble())
-        throw IllegalStateException("This device is not compatible")
     }
 }
 

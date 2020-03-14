@@ -42,12 +42,12 @@ data class Message(var user:String,
                         ATTRIBUTE.USERNAME.ordinal -> {
                             val userNameBytes = ByteArray(reader.readByte().toInt())
                             reader.read(userNameBytes)
-                            userName = userNameBytes.toString()
+                            userName = userNameBytes.toString(Charsets.UTF_8)
                         }
                         ATTRIBUTE.MESSAGE.ordinal -> {
                             val messageNameBytes = ByteArray(reader.readByte().toInt())
                             reader.read(messageNameBytes)
-                            message = messageNameBytes.toString()
+                            message = messageNameBytes.toString(Charsets.UTF_8)
                         }
                     }
                 }

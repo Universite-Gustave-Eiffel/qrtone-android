@@ -1,0 +1,5 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Sat Mar 14 16:22:24 CET 2020
+qrtone-0.3-SNAPSHOT.jar>=
+qrtone-0.3-SNAPSHOT.pom>=
+qrtone-0.3-SNAPSHOT-sources.jar>=

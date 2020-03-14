@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.noise-planet</groupId>
+  <artifactId>qrtone-parent</artifactId>
+  <versioning>
+    <versions>
+      <version>0.3-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20200314152216</lastUpdated>
+  </versioning>
+</metadata>

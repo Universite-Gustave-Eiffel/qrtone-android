@@ -23,5 +23,4 @@
     <string name="username_hint">Username</string>
     <string name="start">Start</string>
     <string name="hint_message">Enter message</string>
-    <string name="title_activity_chat">Chat</string>
 </resources>

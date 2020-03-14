@@ -191,12 +191,10 @@ class AudioProcess constructor(
         val mSampleRates =
             intArrayOf(44100, 22050, 16000)
         val encodings = intArrayOf(
-            AudioFormat.ENCODING_PCM_16BIT,
-            AudioFormat.ENCODING_PCM_8BIT
+            AudioFormat.ENCODING_PCM_16BIT
         )
         val audioChannels = shortArrayOf(
-            AudioFormat.CHANNEL_IN_MONO.toShort(),
-            AudioFormat.CHANNEL_IN_STEREO.toShort()
+            AudioFormat.CHANNEL_IN_MONO.toShort()
         )
         tryLoop@ for (tryRate in mSampleRates) {
             for (tryEncoding in encodings) {

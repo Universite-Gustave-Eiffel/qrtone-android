@@ -58,7 +58,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener {
     }
 
     private fun getAudioOutput(): Int {
-        return AudioManager.STREAM_RING
+        return AudioManager.STREAM_MUSIC
     }
 
     private fun playMessage(payload: ByteArray) {

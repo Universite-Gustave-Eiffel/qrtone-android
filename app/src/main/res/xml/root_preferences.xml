@@ -15,40 +15,37 @@
   -->
 
 <androidx.preference.PreferenceScreen
-        xmlns:app="http://schemas.android.com/apk/res-auto">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
             app:title="@string/messages_header">
 
-        <EditTextPreference
-                app:key="signature"
-                app:title="@string/signature_title"
-                app:useSimpleSummaryProvider="true"/>
-
         <ListPreference
-                app:key="reply"
-                app:title="@string/reply_title"
-                app:entries="@array/reply_entries"
-                app:entryValues="@array/reply_values"
-                app:defaultValue="reply"
+                app:key="fec_level"
+                app:title="@string/settings_fec_level"
+                android:summary="@string/settings_fec_summary"
+                app:entries="@array/fec_levels"
+                app:entryValues="@array/fac_levels_values"
+                app:defaultValue="q"
                 app:useSimpleSummaryProvider="true"/>
 
-    </PreferenceCategory>
-
-    <PreferenceCategory
-            app:title="@string/sync_header">
-
-        <SwitchPreferenceCompat
-                app:key="sync"
-                app:title="@string/sync_title"/>
-
-        <SwitchPreferenceCompat
-                app:key="attachment"
-                app:title="@string/attachment_title"
-                app:summaryOn="@string/attachment_summary_on"
-                app:summaryOff="@string/attachment_summary_off"
-                app:dependency="sync"/>
+        <CheckBoxPreference
+            app:key="add_crc"
+            app:title="@string/settings_enable_crc"
+            android:summary="@string/settings_enable_crc_summary"
+            app:defaultValue="true"
+            />
 
     </PreferenceCategory>
+<PreferenceCategory app:title="@string/settings_recognition">
+    <EditTextPreference
+        android:defaultValue="6"
+        android:key="settings_recording_duration"
+        android:title="@string/title_settings_minimal_signal_noise_ration"
+        android:summary="@string/summary_settings_minimal_signal_noise_ration"
+        android:dependency="settings_snr"
+        android:inputType="numberDecimal"/>
+</PreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

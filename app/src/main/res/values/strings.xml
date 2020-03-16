@@ -24,4 +24,11 @@
     <string name="start">Start</string>
     <string name="hint_message">Enter message</string>
     <string name="permission_explain_audio_record">Recording audio is necessary for decoding audio messages</string>
+    <string name="settings_fec_level">Message error correction level</string>
+    <string name="settings_enable_crc">Add CRC in message</string>
+    <string name="settings_recognition">Receiver</string>
+    <string name="title_settings_minimal_signal_noise_ration">Signal Noise Ratio (dB)</string>
+    <string name="summary_settings_minimal_signal_noise_ration">Reduce this number in noisy environment</string>
+    <string name="settings_enable_crc_summary">Ensure the message is not altered</string>
+    <string name="settings_fec_summary">Recover errors by adding tones</string>
 </resources>

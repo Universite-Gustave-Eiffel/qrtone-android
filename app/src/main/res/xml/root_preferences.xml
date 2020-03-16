@@ -41,10 +41,9 @@
 <PreferenceCategory app:title="@string/settings_recognition">
     <EditTextPreference
         android:defaultValue="6"
-        android:key="settings_recording_duration"
+        android:key="settings_snr"
         android:title="@string/title_settings_minimal_signal_noise_ration"
         android:summary="@string/summary_settings_minimal_signal_noise_ration"
-        android:dependency="settings_snr"
         android:inputType="numberDecimal"/>
 </PreferenceCategory>
 

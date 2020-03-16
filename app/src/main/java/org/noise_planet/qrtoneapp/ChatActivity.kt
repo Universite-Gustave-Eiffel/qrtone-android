@@ -11,11 +11,15 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.android.synthetic.main.activity_chat.*
 import org.noise_planet.qrtone.Configuration
 import org.noise_planet.qrtone.QRTone
@@ -25,7 +29,8 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class ChatActivity : AppCompatActivity(), PropertyChangeListener {
+class ChatActivity : AppCompatActivity(), PropertyChangeListener,
+    Preference.OnPreferenceChangeListener {
     private lateinit var adapter: MessageAdapter
     private var audioTrack: AudioTrack? = null
     var listening = AtomicBoolean(true)
@@ -33,7 +38,6 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
-        //setSupportActionBar(toolbar)
 
         messageList.layoutManager = LinearLayoutManager(this)
         adapter = MessageAdapter(this)
@@ -74,8 +78,10 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener {
     }
 
     private fun initAudioProcess() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+        val snr = sharedPreferences.getString("settings_snr", "6")!!.toDouble()
         listening.set(true)
-        var audioProcess = AudioProcess(listening)
+        var audioProcess = AudioProcess(listening, snr.toDouble())
         audioProcess.listeners.addPropertyChangeListener(this)
         // Start listening messages
         Thread(audioProcess).start()
@@ -85,21 +91,44 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener {
         return AudioManager.STREAM_MUSIC
     }
 
+    override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
+        if(preference.key == "settings_snr") {
+            // restart audio process
+            if(checkAndAskPermissions()) {
+                listening.set(false)
+                listening = AtomicBoolean(true)
+                initAudioProcess()
+            }
+        }
+        return true
+    }
+
     private fun playMessage(payload: ByteArray) {
+        val sharedPreferences =
+            PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+        val fecLevel = sharedPreferences.getString("fec_level", "q")
+        val addCRC = sharedPreferences.getBoolean("add_crc", true)
+        val c = when (fecLevel) {
+            "l" -> Configuration.ECC_LEVEL.ECC_L
+            "m" -> Configuration.ECC_LEVEL.ECC_M
+            "q" -> Configuration.ECC_LEVEL.ECC_Q
+            else -> Configuration.ECC_LEVEL.ECC_H
+        }
+
         val oldTrack = audioTrack
         if (oldTrack != null) {
             oldTrack.pause()
             oldTrack.flush()
             oldTrack.release()
         }
-        val newTrack =  AudioTrack(
+        val newTrack = AudioTrack(
             getAudioOutput(), 44100, AudioFormat
                 .CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, BUFFER_SIZE * (java.lang.Short
                 .SIZE / java.lang.Byte.SIZE), AudioTrack.MODE_STREAM
         )
         audioTrack = newTrack
         newTrack.play()
-        val toneFeed = ToneFeed(newTrack, payload, listening)
+        val toneFeed = ToneFeed(newTrack, payload, listening, addCRC, c)
         Thread(toneFeed).start()
     }
 
@@ -109,6 +138,9 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener {
         if(checkAndAskPermissions()) {
             initAudioProcess()
         }
+        findViewById<EditText>(R.id.txtMessage).requestFocus()
+        val inputManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
     }
 
     /**
@@ -206,7 +238,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener {
     }
 
     private class ToneFeed(
-        private val audioTrack: AudioTrack, private val payload: ByteArray,  private val activated: AtomicBoolean
+        private val audioTrack: AudioTrack, private val payload: ByteArray,  private val activated: AtomicBoolean, private val addCRC: Boolean, private val fecLevel: Configuration.ECC_LEVEL
     ) : Runnable {
 
 
@@ -228,7 +260,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener {
             }
 
             val qrTone = QRTone(Configuration.getAudible(audioTrack.sampleRate.toDouble()))
-            val samples = qrTone.setPayload(payload)
+            val samples = qrTone.setPayload(payload, fecLevel, addCRC)
             var cursor = 0
             while (activated.get() && cursor < samples) {
                 val windowLength = Math.min(samples - cursor, BUFFER_SIZE)

@@ -20,7 +20,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="error_empty_username">Username should not be empty</string>
-    <string name="username_hint">Username</string>
+    <string name="username_hint">Pseudonym (short)</string>
     <string name="start">Start</string>
     <string name="hint_message">Enter message</string>
     <string name="permission_explain_audio_record">Recording audio is necessary for decoding audio messages</string>

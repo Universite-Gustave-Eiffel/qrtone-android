@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 
 class AudioProcess constructor(
-    private val recording: AtomicBoolean
+    private val recording: AtomicBoolean,
+    private val snr: Double
 ) :
     Runnable {
     private var bufferSize = 0
@@ -25,7 +26,7 @@ class AudioProcess constructor(
      * @return Listener manager
      */
     val listeners = PropertyChangeSupport(this)
-    private var processingThread = ProcessingThread(recording, listeners)
+    private var processingThread = ProcessingThread(recording, listeners, snr)
 
     enum class STATE {
         WAITING, PROCESSING, WAITING_END_PROCESSING, CLOSED
@@ -104,7 +105,7 @@ class AudioProcess constructor(
         }
     }
 
-    class ProcessingThread(val recording : AtomicBoolean, val listeners : PropertyChangeSupport) : Runnable {
+    class ProcessingThread(val recording : AtomicBoolean, val listeners : PropertyChangeSupport, val snr: Double) : Runnable {
         private val bufferToProcess: Queue<ShortArray> =
             ConcurrentLinkedQueue()
         private val processing = AtomicBoolean(false)
@@ -140,7 +141,16 @@ class AudioProcess constructor(
         }
 
         override fun run() {
-            val qrTone = QRTone(Configuration.getAudible(sampleRate))
+            val qrTone = QRTone(Configuration(
+                sampleRate,
+                Configuration.DEFAULT_AUDIBLE_FIRST_FREQUENCY,
+                0,
+                Configuration.MULT_SEMITONE,
+                Configuration.DEFAULT_WORD_TIME,
+                snr,
+                Configuration.DEFAULT_GATE_TIME,
+                Configuration.DEFAULT_WORD_SILENCE_TIME
+            ))
             while (recording.get()) {
                 while (!bufferToProcess.isEmpty() && recording.get()) {
                     processing.set(true)

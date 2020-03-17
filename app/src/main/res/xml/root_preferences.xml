@@ -14,37 +14,37 @@
   ~ limitations under the License.
   -->
 
-<androidx.preference.PreferenceScreen
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory
-            app:title="@string/messages_header">
-
+    <PreferenceCategory app:title="@string/messages_header">
+        <EditTextPreference
+            android:summary="@string/settings_summary"
+            app:key="pseudonym"
+            app:title="@string/username_hint" />
         <ListPreference
-                app:key="fec_level"
-                app:title="@string/settings_fec_level"
-                android:summary="@string/settings_fec_summary"
-                app:entries="@array/fec_levels"
-                app:entryValues="@array/fac_levels_values"
-                app:defaultValue="q"
-                app:useSimpleSummaryProvider="true"/>
+            android:summary="@string/settings_fec_summary"
+            app:defaultValue="q"
+            app:entries="@array/fec_levels"
+            app:entryValues="@array/fac_levels_values"
+            app:key="fec_level"
+            app:title="@string/settings_fec_level"
+            app:useSimpleSummaryProvider="true" />
 
         <CheckBoxPreference
-            app:key="add_crc"
-            app:title="@string/settings_enable_crc"
             android:summary="@string/settings_enable_crc_summary"
             app:defaultValue="true"
-            />
+            app:key="add_crc"
+            app:title="@string/settings_enable_crc" />
 
     </PreferenceCategory>
-<PreferenceCategory app:title="@string/settings_recognition">
-    <EditTextPreference
-        android:defaultValue="6"
-        android:key="settings_snr"
-        android:title="@string/title_settings_minimal_signal_noise_ration"
-        android:summary="@string/summary_settings_minimal_signal_noise_ration"
-        android:inputType="numberDecimal"/>
-</PreferenceCategory>
+    <PreferenceCategory app:title="@string/settings_recognition">
+        <EditTextPreference
+            android:defaultValue="15"
+            android:inputType="numberDecimal"
+            android:key="settings_snr"
+            android:summary="@string/summary_settings_minimal_signal_noise_ration"
+            android:title="@string/title_settings_minimal_signal_noise_ration" />
+    </PreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

@@ -8,8 +8,10 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.Toast
@@ -43,21 +45,41 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
         adapter = MessageAdapter(this)
         messageList.adapter = adapter
 
+
+
+
+        val edittext = findViewById<EditText>(R.id.txtMessage);
+        edittext.setOnKeyListener(
+             fun (
+                 v: View,
+                 keyCode: Int,
+                 event: KeyEvent
+            ): Boolean  {
+                 if(event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                     onSend(v)
+                     return true
+                 }
+                 return false
+             }
+        )
         btnSend.setOnClickListener {
-            if(txtMessage.text.isNotEmpty()) {
-                val message = Message(
-                        App.user,
-                        txtMessage.text.toString(),
-                        Calendar.getInstance().timeInMillis
-                )
-                playMessage(message.craftMessage())
-                resetInput(false)
-            } else {
-                Toast.makeText(applicationContext,"Message should not be empty", Toast.LENGTH_SHORT).show()
-            }
+            onSend(it)
         }
     }
 
+    fun onSend(view: View) {
+        if(txtMessage.text.isNotEmpty()) {
+            val message = Message(
+                App.user,
+                txtMessage.text.toString(),
+                Calendar.getInstance().timeInMillis
+            )
+            playMessage(message.craftMessage())
+            resetInput(false)
+        } else {
+            Toast.makeText(applicationContext,"Message should not be empty", Toast.LENGTH_SHORT).show()
+        }
+    }
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -79,7 +101,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
 
     private fun initAudioProcess() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
-        val snr = sharedPreferences.getString("settings_snr", "6")!!.toDouble()
+        val snr = sharedPreferences.getString("settings_snr", Configuration.DEFAULT_TRIGGER_SNR.toString())!!.toDouble()
         listening.set(true)
         var audioProcess = AudioProcess(listening, snr.toDouble())
         audioProcess.listeners.addPropertyChangeListener(this)
@@ -262,10 +284,16 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
             val qrTone = QRTone(Configuration.getAudible(audioTrack.sampleRate.toDouble()))
             val samples = qrTone.setPayload(payload, fecLevel, addCRC)
             var cursor = 0
+            // Write silence for some time in order to waiting for init
+            val emptyBuffer = ShortArray(BUFFER_SIZE)
+            val blankSamples = ((audioTrack.sampleRate * 0.4) / BUFFER_SIZE).toInt()
+            for(i in 0 .. blankSamples) {
+                audioTrack.write(emptyBuffer, 0, emptyBuffer.size)
+            }
             while (activated.get() && cursor < samples) {
                 val windowLength = Math.min(samples - cursor, BUFFER_SIZE)
                 val fSamples = FloatArray(windowLength)
-                qrTone.getSamples(fSamples, cursor, Short.MAX_VALUE / 2.0)
+                qrTone.getSamples(fSamples, cursor, Short.MAX_VALUE * Math.pow(10.0, -26 / 20.0) * Math.sqrt(2.0))
                 val buffer = doubleToShort(fSamples)
                 try {
                     audioTrack.write(buffer, 0, buffer.size)
@@ -273,6 +301,10 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
                     return
                 }
                 cursor += buffer.size
+            }
+            // Write zeros for more 1 second
+            for(i in 0 .. blankSamples) {
+                audioTrack.write(emptyBuffer, 0, emptyBuffer.size)
             }
             try {
                 audioTrack.stop()

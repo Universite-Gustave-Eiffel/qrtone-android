@@ -15,7 +15,7 @@ import kotlin.math.max
 
 class AudioProcess constructor(
     private val recording: AtomicBoolean,
-    private val snr: Double
+    snr: Double
 ) :
     Runnable {
     private var bufferSize = 0
@@ -126,15 +126,6 @@ class AudioProcess constructor(
             return false;
         }
 
-        fun toFloat(shortArray : ShortArray) : FloatArray {
-            val fullArray = FloatArray(shortArray.size)
-            for (i in shortArray.indices) {
-                fullArray[i] =
-                    shortArray[i] / Short.MAX_VALUE.toFloat()
-            }
-            return fullArray
-        }
-
         fun processMessage(qrTone : QRTone) {
             val payload = qrTone.payload
             listeners.firePropertyChange(PROP_MESSAGE_RECEIVED, null, payload)
@@ -157,7 +148,7 @@ class AudioProcess constructor(
                     val buffer = bufferToProcess.poll()
                     if (buffer != null) {
                         if (buffer.size <= qrTone.maximumWindowLength) { // Good buffer size, use it
-                            if(qrTone.pushSamples(toFloat(buffer))) {
+                            if(qrTone.pushSamples(buffer)) {
                                 processMessage(qrTone)
                             }
                         } else {
@@ -172,7 +163,7 @@ class AudioProcess constructor(
                                 val samples =
                                     Arrays.copyOfRange(buffer, cursor, cursor + sampleLen)
                                 cursor += samples.size
-                                if(qrTone.pushSamples(toFloat(samples))) {
+                                if(qrTone.pushSamples(samples)) {
                                     // Got a message
                                     processMessage(qrTone)
                                 }
@@ -218,7 +209,7 @@ class AudioProcess constructor(
                     if (tryBufferSize != AudioRecord.ERROR_BAD_VALUE) {
                         bufferSize = max(
                             tryBufferSize,
-                            512
+                            Short.SIZE_BYTES * 512
                         )
                         encoding = tryEncoding
                         audioChannel = tryAudioChannel.toInt()

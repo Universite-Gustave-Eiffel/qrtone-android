@@ -5,21 +5,10 @@
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>
-    <string name="sync_header">Sync</string>
 
     <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
 
     <!-- Sync Preferences -->
-    <string name="sync_title">Sync email periodically</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails</string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="error_empty_username">Username should not be empty</string>
     <string name="username_hint">Pseudonym (short)</string>
     <string name="start">Start</string>
     <string name="hint_message">Enter message</string>
@@ -31,4 +20,5 @@
     <string name="summary_settings_minimal_signal_noise_ration">Reduce this number in noisy environment</string>
     <string name="settings_enable_crc_summary">Ensure the message is not altered</string>
     <string name="settings_fec_summary">Recover errors by adding tones</string>
+    <string name="settings_summary">Pseudonym embedded in messages</string>
 </resources>

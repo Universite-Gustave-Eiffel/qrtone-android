@@ -162,7 +162,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
         }
         findViewById<EditText>(R.id.txtMessage).requestFocus()
         val inputManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+        inputManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
     }
 
     /**
@@ -293,7 +293,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
             while (activated.get() && cursor < samples) {
                 val windowLength = Math.min(samples - cursor, BUFFER_SIZE)
                 val fSamples = FloatArray(windowLength)
-                qrTone.getSamples(fSamples, cursor, Short.MAX_VALUE * Math.pow(10.0, -26 / 20.0) * Math.sqrt(2.0))
+                qrTone.getSamples(fSamples, cursor, Short.MAX_VALUE * Math.pow(10.0, -16 / 20.0) * Math.sqrt(2.0))
                 val buffer = doubleToShort(fSamples)
                 try {
                     audioTrack.write(buffer, 0, buffer.size)

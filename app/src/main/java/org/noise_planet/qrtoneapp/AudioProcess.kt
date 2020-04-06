@@ -3,11 +3,13 @@ package org.noise_planet.qrtoneapp
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.os.Build
 import android.os.Process
 import android.util.Log
 import org.noise_planet.qrtone.Configuration
 import org.noise_planet.qrtone.QRTone
 import java.beans.PropertyChangeSupport
+import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -65,11 +67,11 @@ class AudioProcess constructor(
             null
         }
     }
+
     override fun run() {
         try {
             setCurrentState(STATE.PROCESSING)
             val audioRecord = createAudioRecord()
-            var buffer: ShortArray
             if (recording.get() && audioRecord != null) {
                 try {
                     try {
@@ -79,13 +81,25 @@ class AudioProcess constructor(
                     }
                     Thread(processingThread).start()
                     audioRecord.startRecording()
-                    while (recording.get()) {
-                        buffer = ShortArray(bufferSize)
-                        val read = audioRecord.read(buffer, 0, buffer.size)
-                        if (read < buffer.size) {
-                            buffer = Arrays.copyOfRange(buffer, 0, read)
+
+                    if(encoding == AudioFormat.ENCODING_PCM_16BIT) {
+                        while (recording.get()) {
+                            var buffer = ShortArray(bufferSize)
+                            val read = audioRecord.read(buffer, 0, buffer.size)
+                            if (read < buffer.size) {
+                                buffer = buffer.copyOfRange(0, read)
+                            }
+                            processingThread.addSample(buffer)
                         }
-                        processingThread.addSample(buffer)
+                    } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        while (recording.get()) {
+                            var buffer = FloatArray(bufferSize)
+                            val read = audioRecord.read(buffer, 0, buffer.size, AudioRecord.READ_BLOCKING)
+                            if (read < buffer.size) {
+                                buffer = buffer.copyOfRange(0, read)
+                            }
+                            processingThread.addSample(buffer)
+                        }
                     }
                     setCurrentState(STATE.WAITING_END_PROCESSING)
                     while (processingThread.isProcessing()) {
@@ -106,7 +120,7 @@ class AudioProcess constructor(
     }
 
     class ProcessingThread(val recording : AtomicBoolean, val listeners : PropertyChangeSupport, val snr: Double) : Runnable {
-        private val bufferToProcess: Queue<ShortArray> =
+        private val bufferToProcess: Queue<FloatArray> =
             ConcurrentLinkedQueue()
         private val processing = AtomicBoolean(false)
         private var sampleRate = 44100.0
@@ -115,6 +129,14 @@ class AudioProcess constructor(
          * @param sample
          */
         fun addSample(sample: ShortArray) {
+            val fSamples = FloatArray(sample.size);
+            for(i in sample.indices) {
+                fSamples[i] = sample[i].div(Short.MAX_VALUE.toFloat());
+            }
+            bufferToProcess.add(fSamples)
+        }
+
+        fun addSample(sample: FloatArray) {
             bufferToProcess.add(sample)
         }
 
@@ -190,10 +212,16 @@ class AudioProcess constructor(
      */
     init {
         val mSampleRates =
-            intArrayOf(44100, 22050, 16000)
-        val encodings = intArrayOf(
-            AudioFormat.ENCODING_PCM_16BIT
-        )
+            intArrayOf(48000, 44100, 22050, 16000)
+        val encodings = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            intArrayOf(
+                AudioFormat.ENCODING_PCM_FLOAT, AudioFormat.ENCODING_PCM_16BIT
+            )
+        } else {
+            intArrayOf(
+                AudioFormat.ENCODING_PCM_16BIT
+            )
+        }
         val audioChannels = shortArrayOf(
             AudioFormat.CHANNEL_IN_MONO.toShort()
         )
@@ -204,12 +232,16 @@ class AudioProcess constructor(
                         tryRate,
                         tryAudioChannel.toInt(), tryEncoding
                     )
+                    var bufferSampleSize = Short.SIZE_BYTES;
+                    if(tryEncoding == AudioFormat.ENCODING_PCM_FLOAT) {
+                        bufferSampleSize = 4;
+                    }
                     // Take a higher buffer size in order to get a smooth recording under load
                     // avoiding Buffer overflow error on AudioRecord side.
                     if (tryBufferSize != AudioRecord.ERROR_BAD_VALUE) {
                         bufferSize = max(
                             tryBufferSize,
-                            Short.SIZE_BYTES * 512
+                            bufferSampleSize * 2048
                         )
                         encoding = tryEncoding
                         audioChannel = tryAudioChannel.toInt()

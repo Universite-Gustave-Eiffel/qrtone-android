@@ -284,16 +284,16 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
             val qrTone = QRTone(Configuration.getAudible(audioTrack.sampleRate.toDouble()))
             val samples = qrTone.setPayload(payload, fecLevel, addCRC)
             var cursor = 0
-            // Write silence for some time in order to waiting for init
-            val emptyBuffer = ShortArray(BUFFER_SIZE)
-            val blankSamples = ((audioTrack.sampleRate * 0.4) / BUFFER_SIZE).toInt()
-            for(i in 0 .. blankSamples) {
-                audioTrack.write(emptyBuffer, 0, emptyBuffer.size)
+            while(activated.get() && audioTrack.state != AudioTrack.STATE_INITIALIZED) {
+                Thread.sleep(50)
             }
+            // Write silence for some time in order to waiting for init
+            val warmupLength = (audioTrack.sampleRate * 1.5).toInt()
+            audioTrack.write(ShortArray(warmupLength), 0, warmupLength)
             while (activated.get() && cursor < samples) {
                 val windowLength = Math.min(samples - cursor, BUFFER_SIZE)
                 val fSamples = FloatArray(windowLength)
-                qrTone.getSamples(fSamples, cursor, Short.MAX_VALUE * Math.pow(10.0, -16 / 20.0) * Math.sqrt(2.0))
+                qrTone.getSamples(fSamples, cursor, Short.MAX_VALUE * Math.pow(10.0, -12 / 20.0) * Math.sqrt(2.0))
                 val buffer = doubleToShort(fSamples)
                 try {
                     audioTrack.write(buffer, 0, buffer.size)
@@ -302,10 +302,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
                 }
                 cursor += buffer.size
             }
-            // Write zeros for more 1 second
-            for(i in 0 .. blankSamples) {
-                audioTrack.write(emptyBuffer, 0, emptyBuffer.size)
-            }
+            audioTrack.write(ShortArray(BUFFER_SIZE), 0, warmupLength)
             try {
                 audioTrack.stop()
             } catch (ex: IllegalStateException) {

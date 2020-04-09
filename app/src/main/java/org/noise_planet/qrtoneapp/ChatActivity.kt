@@ -12,8 +12,10 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.ScaleAnimation
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -34,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ChatActivity : AppCompatActivity(), PropertyChangeListener,
     Preference.OnPreferenceChangeListener {
     private lateinit var adapter: MessageAdapter
+    var pitchNotif:LinearLayout? = null
     private var audioTrack: AudioTrack? = null
     var listening = AtomicBoolean(true)
     val PERMISSION_RECORD_AUDIO = 1
@@ -48,7 +51,9 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
 
 
 
-        val edittext = findViewById<EditText>(R.id.txtMessage);
+        val edittext = findViewById<EditText>(R.id.txtMessage)
+        pitchNotif = findViewById(R.id.pitch_notification)
+        // TODO ScaleAnimation
         edittext.setOnKeyListener(
              fun (
                  v: View,
@@ -288,7 +293,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
                 Thread.sleep(50)
             }
             // Write silence for some time in order to waiting for init
-            val warmupLength = (audioTrack.sampleRate * 1.5).toInt()
+            val warmupLength = (audioTrack.sampleRate * 0.75).toInt()
             audioTrack.write(ShortArray(warmupLength), 0, warmupLength)
             while (activated.get() && cursor < samples) {
                 val windowLength = Math.min(samples - cursor, BUFFER_SIZE)

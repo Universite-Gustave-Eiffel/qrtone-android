@@ -8,6 +8,7 @@ import android.os.Process
 import android.util.Log
 import org.noise_planet.qrtone.Configuration
 import org.noise_planet.qrtone.QRTone
+import org.noise_planet.qrtone.TriggerAnalyzer
 import java.beans.PropertyChangeSupport
 import java.nio.ByteBuffer
 import java.util.*
@@ -119,11 +120,12 @@ class AudioProcess constructor(
         }
     }
 
-    class ProcessingThread(val recording : AtomicBoolean, val listeners : PropertyChangeSupport, val snr: Double) : Runnable {
+    class ProcessingThread(val recording : AtomicBoolean, val listeners : PropertyChangeSupport, val snr: Double) : Runnable, TriggerAnalyzer.TriggerCallback {
         private val bufferToProcess: Queue<FloatArray> =
             ConcurrentLinkedQueue()
         private val processing = AtomicBoolean(false)
         private var sampleRate = 44100.0
+        var micLvl = -99.0
         /**
          * Add Signed Short sound samples
          * @param sample
@@ -153,6 +155,21 @@ class AudioProcess constructor(
             listeners.firePropertyChange(PROP_MESSAGE_RECEIVED, null, payload)
         }
 
+        override fun onTrigger(triggerAnalyzer: TriggerAnalyzer?, messageStartLocation: Long) {
+            // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onNewLevels(
+            triggerAnalyzer: TriggerAnalyzer?,
+            location: Long,
+            spl: DoubleArray?
+        ) {
+            if(spl != null) {
+                this.micLvl = spl[1];
+                //listeners.firePropertyChange(PROP_MIC_LVL, null, payload)
+            }
+        }
+
         override fun run() {
             val qrTone = QRTone(Configuration(
                 sampleRate,
@@ -164,6 +181,7 @@ class AudioProcess constructor(
                 Configuration.DEFAULT_GATE_TIME,
                 Configuration.DEFAULT_WORD_SILENCE_TIME
             ))
+            qrTone.setTriggerCallback(this)
             while (recording.get()) {
                 while (!bufferToProcess.isEmpty() && recording.get()) {
                     processing.set(true)
@@ -202,6 +220,7 @@ class AudioProcess constructor(
     companion object {
         const val PROP_STATE_CHANGED = "PROP_STATE_CHANGED"
         const val PROP_MESSAGE_RECEIVED = "PROP_MESSAGE_RECEIVED"
+        const val PROP_MIC_LVL = "PROP_MIC_LVL"
     }
 
     /**

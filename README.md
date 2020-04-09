@@ -19,6 +19,7 @@ The data transmission method is similar to the first Internet modems except that
 Here a spectrogram of a sequence:
 
 ![OpenWarble spectrogram](noise.png)
+
 *Top source signal, bottom recorded audio in real situation*
 
 Listen to QRTone:

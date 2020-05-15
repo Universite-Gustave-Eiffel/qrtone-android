@@ -18,7 +18,8 @@ import kotlin.math.max
 
 class AudioProcess constructor(
     private val recording: AtomicBoolean,
-    snr: Double
+    snr: Double,
+    val audible: Boolean
 ) :
     Runnable {
     private var bufferSize = 0
@@ -80,6 +81,7 @@ class AudioProcess constructor(
                     } catch (ex: IllegalArgumentException) { // Ignore
                     } catch (ex: SecurityException) {
                     }
+                    processingThread.audible = audible
                     Thread(processingThread).start()
                     audioRecord.startRecording()
 
@@ -126,6 +128,7 @@ class AudioProcess constructor(
         private val processing = AtomicBoolean(false)
         private var sampleRate = 44100.0
         var micLvl = -99.0
+        var audible = true
         /**
          * Add Signed Short sound samples
          * @param sample
@@ -171,16 +174,7 @@ class AudioProcess constructor(
         }
 
         override fun run() {
-            val qrTone = QRTone(Configuration(
-                sampleRate,
-                Configuration.DEFAULT_AUDIBLE_FIRST_FREQUENCY,
-                0,
-                Configuration.MULT_SEMITONE,
-                Configuration.DEFAULT_WORD_TIME,
-                snr,
-                Configuration.DEFAULT_GATE_TIME,
-                Configuration.DEFAULT_WORD_SILENCE_TIME
-            ))
+            val qrTone = QRTone(if (audible) Configuration.getAudible(sampleRate) else Configuration.getInaudible(sampleRate))
             qrTone.setTriggerCallback(this)
             while (recording.get()) {
                 while (!bufferToProcess.isEmpty() && recording.get()) {

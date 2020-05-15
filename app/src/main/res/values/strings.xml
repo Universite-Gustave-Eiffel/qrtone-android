@@ -21,4 +21,7 @@
     <string name="settings_enable_crc_summary">Ensure the message is not altered</string>
     <string name="settings_fec_summary">Recover errors by adding tones</string>
     <string name="settings_summary">Pseudonym embedded in messages</string>
+    <string name="ultrasonic_mode">Inaudible mode</string>
+    <string name="ultrasonic_mode_details">Use inaudible frequency bands 18-22 khz</string>
+    <string name="experimental">Experimental options</string>
 </resources>

@@ -108,7 +108,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
         val snr = sharedPreferences.getString("settings_snr", Configuration.DEFAULT_TRIGGER_SNR.toString())!!.toDouble()
         listening.set(true)
-        var audioProcess = AudioProcess(listening, snr.toDouble())
+        var audioProcess = AudioProcess(listening, snr.toDouble(), !sharedPreferences.getBoolean("ultra_sonic", false))
         audioProcess.listeners.addPropertyChangeListener(this)
         // Start listening messages
         Thread(audioProcess).start()
@@ -155,7 +155,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
         )
         audioTrack = newTrack
         newTrack.play()
-        val toneFeed = ToneFeed(newTrack, payload, listening, addCRC, c)
+        val toneFeed = ToneFeed(newTrack, payload, listening, addCRC, c, !sharedPreferences.getBoolean("ultra_sonic", false))
         Thread(toneFeed).start()
     }
 
@@ -265,7 +265,7 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
     }
 
     private class ToneFeed(
-        private val audioTrack: AudioTrack, private val payload: ByteArray,  private val activated: AtomicBoolean, private val addCRC: Boolean, private val fecLevel: Configuration.ECC_LEVEL
+        private val audioTrack: AudioTrack, private val payload: ByteArray,  private val activated: AtomicBoolean, private val addCRC: Boolean, private val fecLevel: Configuration.ECC_LEVEL, val audible: Boolean
     ) : Runnable {
 
 
@@ -285,8 +285,8 @@ class ChatActivity : AppCompatActivity(), PropertyChangeListener,
                 // Ignore
             } catch (ex: SecurityException) {
             }
-
-            val qrTone = QRTone(Configuration.getAudible(audioTrack.sampleRate.toDouble()))
+            val sampleRate = audioTrack.sampleRate.toDouble()
+            val qrTone = QRTone(if(audible) Configuration.getAudible(sampleRate) else Configuration.getInaudible(sampleRate))
             val samples = qrTone.setPayload(payload, fecLevel, addCRC)
             var cursor = 0
             while(activated.get() && audioTrack.state != AudioTrack.STATE_INITIALIZED) {

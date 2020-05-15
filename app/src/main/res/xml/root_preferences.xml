@@ -46,5 +46,12 @@
             android:summary="@string/summary_settings_minimal_signal_noise_ration"
             android:title="@string/title_settings_minimal_signal_noise_ration" />
     </PreferenceCategory>
-
+<PreferenceCategory app:title="@string/experimental">
+    <CheckBoxPreference
+        android:summary="@string/ultrasonic_mode_details"
+        app:defaultValue="false"
+        app:key="ultra_sonic"
+        app:title="@string/ultrasonic_mode"
+        />
+</PreferenceCategory>
 </androidx.preference.PreferenceScreen>
